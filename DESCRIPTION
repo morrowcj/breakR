@@ -1,0 +1,15 @@
+Package: breakR
+Title: Simulate spatio-temporal disturbances, for testing and comparing breakpoint analyses
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Clay",
+           family = "Morrow",
+           role = c("aut", "cre"),
+           email = "morrowcj@outlook.com",
+           comment = c(ORCID = "https::/orcid.org/0000-0002-3069-3296"))
+Description: 
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1

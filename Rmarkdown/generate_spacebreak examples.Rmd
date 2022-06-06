@@ -1,0 +1,94 @@
+---
+title: "generate_spacetime examples"
+author: "Clay Morrow"
+date: "6/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+
+## 1. Stable (undisturbed) systems
+
+```{r}
+bdf.1 <- break_frame(nodes = c(0, 49), slopes = c(0))
+sb.1 <- generate_spacebreak(map.dims = c(4, 4), ntime = 50, break.df = bdf.1,
+                            covar.pars = list(range = .5),
+                            arima.mod = list(ar = .5),
+                            sd = 1, burn.in = 100)
+
+## each pixel through time, with overall trend
+plot.spacebreak(sb.1)
+
+# Note that the initial values are much more variable than the others, 
+# when sd is very low, this is because the burn.in in sparima_sim (and arima.sim) 
+# is not working as expected.
+```
+
+### 1b (with a trend)
+
+```{r}
+bdf.1b <- break_frame(nodes = c(0, 49), slopes = c(.05))
+sb.1b <- generate_spacebreak(map.dims = c(4, 4), ntime = 50, break.df = bdf.1b,
+                            covar.pars = list(range = .5),
+                            arima.mod = list(ar = .5),
+                            sd = 1, burn.in = 100)
+
+## each pixel through time, with overall trend
+plot.spacebreak(sb.1b)
+```
+
+
+## 2. Seasonal changes
+
+```{r}
+bdf.2 <- break_frame(nodes = c(0, 10), slopes = c(0.2))
+sb.2 <- generate_spacebreak(map.dims = c(4, 4), break.df = bdf.2,
+                            covar.pars = list(range = .5),
+                            arima.mod = list(ar = .5),
+                            sd = 1, burn.in = 100,
+                            seasonality = list(amp = 2, per = 1), 
+                            times = seq(0, 10, by = 1/12))
+
+## each pixel through time, with overall trend
+plot.spacebreak(sb.2)
+```
+
+
+## 3. Gradual changes
+
+```{r}
+bdf.3 <- break_frame(nodes = c(0, 5, 10), slopes = c(.8, -.2))
+sb.3 <- generate_spacebreak(map.dims = c(4, 4), break.df = bdf.3,
+                            covar.pars = list(range = .5),
+                            arima.mod = list(ar = .5),
+                            sd = 1, burn.in = 100,
+                            seasonality = list(amp = 1.2, per = 1), 
+                            times = seq(0, 10, by = 1/12))
+
+## each pixel through time, with overall trend
+plot.spacebreak(sb.3)
+```
+
+
+## 4. Abrupt changes
+
+```{r}
+bdf.4 <- break_frame(nodes = c(0, 6 - (1/12), 6, 10), slopes = c(.8, -30, .5))
+sb.4 <- generate_spacebreak(map.dims = c(4, 4), break.df = bdf.4,
+                            covar.pars = list(range = .5),
+                            arima.mod = list(ar = .5),
+                            sd = 1, burn.in = 100,
+                            seasonality = list(amp = 1.2, per = 1), 
+                            times = seq(0, 10, by = 1/12))
+
+## each pixel through time, with overall trend
+plot.spacebreak(sb.4)
+```
