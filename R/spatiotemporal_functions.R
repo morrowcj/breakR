@@ -10,10 +10,17 @@
 #' This list should NOT include an 'innov' element.
 #' @param ... additional arguments passed to \code{arima.sim()}
 #'
-#' @return
+#' @return a matrix containing the simulated variable. Columns correspond to
+#' time points and rows correspond to locations (i.e., pixels).
+#'
+#'
 #' @export
 #'
 #' @examples
+#' cor.mat <- matrix(c(1.0, 0.3, 0.1,
+#'                     0.3, 1.0, 0.0,
+#'                     0.1, 0.0, 1.0), nrow = 3)
+#'
 #' sparima_sim(20, cor.mat)
 #' sparima_sim(innov = rnorm_spcor(20, cor.mat))
 #' ## specify burn-in period (from arima.sim)
@@ -22,7 +29,7 @@
 #' sparima_sim(1, cor.mat, n.start = 100)
 #'
 #' ## compare observed covariance to true covariance
-#' spcor = generate_spcov(c(10, 10), sd = 1, unit.map = TRUE)
+#' spcov = generate_spcov(c(10, 10), sd = 1, unit.map = TRUE)
 #' D = spcov$D.mat
 #' C = spcov$covar.mat
 #' x <- sparima_sim(50, C, model = list(ar = .8), n.start = 100)
@@ -30,9 +37,9 @@
 #' plot(x = D, y = cor(t(x)), xlab = "distance", ylab = "covariance")
 #' ## add line for covariance function
 #' curve(remotePARTS::covar_exp(x, 1), from = 0, to = max(D),
-#'       add = T, col = "red")
+#'       add = TRUE, col = "red")
 sparima_sim <- function(ntime, covar, fast = FALSE, model = list(ar = .2),
-                        burn.in = 20, innov = NULL, ...){
+                       innov = NULL, ...){
   if(!is.null(innov)){
     ## use pre-calculat♣ed innovations
     innov = as.matrix(innov)
@@ -44,11 +51,11 @@ sparima_sim <- function(ntime, covar, fast = FALSE, model = list(ar = .2),
   ## generate spatiotemporally autocorrelated random variable
   if(ntime > 1) {
     sptmp = t(apply(X = innov, MARGIN = 1, function(e){
-      arima.sim(n = ntime, model = model, innov = e, n.start = burn.in, ...)
+      arima.sim(n = ntime, model = model, innov = e, ...)
     }))
   } else if(ntime == 1){ # (for spatial-only case)
     sptmp = matrix(apply(X = innov, MARGIN = 1, function(e){
-      arima.sim(n = ntime, model = model, innov = e,  n.start = burn.in, ...)
+      arima.sim(n = ntime, model = model, innov = e,  ...)
     }), ncol = ntime)
   }
   ## return

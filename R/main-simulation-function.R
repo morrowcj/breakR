@@ -33,6 +33,7 @@ sim_spacetime <- function(nsims = 1){
 #'   component of Y.}
 #' }
 #'
+#'
 #' @export
 #'
 #' @examples
@@ -41,12 +42,12 @@ sim_spacetime <- function(nsims = 1){
 #' bdf <- break_frame(nodes = c(0, 20, 21, 50), slopes = c(.1, -1, .1))
 #' spacebreak <- generate_spacebreak(break.df = bdf, sd = 1)
 #'
-#' plot.spacebreak(x = spacebreak)
+#' breakR:::plot.spacebreak(x = spacebreak)
 #'
 #' ## With seasonality (every 4 time steps)
 #' spacebreak2 <- generate_spacebreak(break.df = bdf, seasonality = list(amp = .5, per = 4), sd = 1)
 #'
-#' plot.spacebreak(x = spacebreak2)
+#' breakR:::plot.spacebreak(x = spacebreak2)
 #'
 generate_spacebreak <- function(map.dims = c(3, 3), ntime = 50, break.df,
                                seasonality = NULL,
@@ -54,8 +55,7 @@ generate_spacebreak <- function(map.dims = c(3, 3), ntime = 50, break.df,
                                covar.pars = list(range = .1),
                                sd = .2,
                                arima.mod = list(ar = .2),
-                               times = NULL,
-                               burn.in = 20){
+                               times = NULL){
 
   ## build time series, if not provided
   if(is.null(times)){
@@ -82,7 +82,7 @@ generate_spacebreak <- function(map.dims = c(3, 3), ntime = 50, break.df,
                           covar.pars = covar.pars, sd = sd)
   ## generate spatiotemporal autocorrelation
   sptemp <- sparima_sim(ntime = ntime, covar = space$covar.mat,
-                        model = arima.mod, burn.in = burn.in)
+                        model = arima.mod)
 
 
   ## Build response
@@ -109,10 +109,11 @@ generate_spacebreak <- function(map.dims = c(3, 3), ntime = 50, break.df,
 #' plot a spacebreak object
 #'
 #' @param x the spacebreak object
+#' @param type a character vector specifying which type of plot to make
+#' @param ... additional parameters passed to other plot methods
 #' @export
 #'
-#' @return
-plot.spacebreak <- function(x, type = "ts"){
+plot.spacebreak <- function(x, type = "ts", ...){
   if(type == "ts"){
     matplot(y = t(x$Y), x = x$time, type = "l", xlab = "time", ylab = "Y")
     lines(x$f.t ~ x$time, col = "red", lty = 1, lwd = 2)

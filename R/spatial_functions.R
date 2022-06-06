@@ -95,7 +95,7 @@ generate_spcov <- function(map.dims = c(5, 5), unit.map = TRUE,
 #' plot(x = D, y = cor(t(x)), xlab = "distance", ylab = "covariance")
 #' ## add line for covariance function
 #' curve(remotePARTS::covar_exp(x, 1), from = 0, to = max(D),
-#'       add = T, col = "red")
+#'       add = TRUE, col = "red")
 #'
 rnorm_spcor <- function(n, covar, fast = FALSE){
 
