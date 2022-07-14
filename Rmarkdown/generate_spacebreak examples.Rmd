@@ -1,8 +1,9 @@
 ---
-title: "generate_spacetime examples"
+title: "generate_spacebreak examples"
 author: "Clay Morrow"
-date: "6/2/2022"
-output: html_document
+date: "7/14/2022"
+output: 
+  html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -15,9 +16,9 @@ library(dplyr)
 library(ggplot2)
 ```
 
-## Component functions
+# Component functions
 
-### Piecewise time series
+## Piecewise time series
 
 In order to facilitate time-dependent trends, `breakR` uses piecewise time 
 series functions to generate temporal data. The way these functions are created
@@ -58,7 +59,7 @@ df = break_frame(nodes = c(0, 10, 11, 20, 35, 49), slopes = c(.1, -1, 0, .05, -.
 plot(x = 0:49, y = breakwise(0:49, df), type = "line", xlab = "time")
 ```
 
-### Seasonality
+## Seasonality
 
 We can also add seasonality with the `season` function. For example, if we want 
 a 3-year monthly time series, with a 12-month seasonal cycle, we would use the following
@@ -75,7 +76,7 @@ seas = season(t = seq(0, 2, by = 1/12), amp = 1, per = 1, noise.sd = .2)
 plot(y = seas, x = seq(0, 2, by = 1/12), type = "b")
 ```
 
-### Piecewise functions with seasonality
+## Piecewise functions with seasonality
 
 Making a time trend with seasonality is as simple as adding these functionalities
 together.
@@ -93,7 +94,7 @@ lines(x = time, y = f.t, lty = 2, col = "blue")
 abline(v = breaks, lty = 2, col = "grey70")
 ```
 
-### Spatial variation
+## Spatial variation
 
 The function `generate_spcov()` is used to create spatial relationships. For 
 example, if we want a 25 pixel map with spatial autocorrelation that ranges
@@ -128,7 +129,7 @@ covariance structure created above to create 5 random samples for each pixel.
 rnorm_spcor(n = 5, covar = space$covar.mat)
 ```
 
-### Spatiotemporal data
+## Spatiotemporal data
 
 And finally, we can generate a spatiotemporal variable with the `sparima_sim()`
 function. Here, we create a spatiotemporal variable with 20% AR(1) temporal 
@@ -161,13 +162,13 @@ data.frame(space$coord.df, Y = st.trend) %>%
   facet_wrap(~variable)
 ```
 
-### Main simulation function
+## Main simulation function
 
 The main function for generating a spatiotemporal system, `generate_spacetime()`, 
 incorporates all the functionality from the functions demonstrated above. The
 next section will look at some examples of systems that can be created.◘
 
-## 1. Stable (undisturbed) systems
+# 1. Stable (undisturbed) systems
 
 ```{r}
 bdf.1 <- break_frame(nodes = c(0, 49), slopes = c(0))
@@ -184,7 +185,7 @@ breakR:::plot.spacebreak(sb.1)
 # is not working as expected.
 ```
 
-### 1b (with a trend)
+## 1b (with a trend)
 
 ```{r}
 bdf.1b <- break_frame(nodes = c(0, 49), slopes = c(.05))
@@ -198,7 +199,7 @@ breakR:::plot.spacebreak(sb.1b)
 ```
 
 
-## 2. Seasonal changes
+# 2. Seasonal changes
 
 ```{r}
 bdf.2 <- break_frame(nodes = c(0, 10), slopes = c(0.2))
@@ -214,7 +215,7 @@ breakR:::plot.spacebreak(sb.2)
 ```
 
 
-## 3. Gradual changes
+# 3. Gradual changes
 
 ```{r}
 bdf.3 <- break_frame(nodes = c(0, 5, 10), slopes = c(.8, -.2))
@@ -230,7 +231,7 @@ breakR:::plot.spacebreak(sb.3)
 ```
 
 
-## 4. Abrupt changes
+# 4. Abrupt changes
 
 ```{r}
 bdf.4 <- break_frame(nodes = c(0, 6 - (1/12), 6, 10), slopes = c(.8, -30, .5))
@@ -244,3 +245,56 @@ sb.4 <- generate_spacebreak(map.dims = c(4, 4), break.df = bdf.4,
 ## each pixel through time, with overall trend
 breakR:::plot.spacebreak(sb.4)
 ```
+
+# Simulate multiple maps and apply fitting functions:
+
+Here, I'll use the same parameters from the "Abrupt Changes" example above, to
+simulate 3 different maps and apply a fit function to each map. 
+
+In this example, we'll create our fit function with a simple linear model and
+a mixed effects model. However, users interested in breakpoint analyses will
+need to write a function that contains each of the breakpoint methods to be
+tested. Here is that example fit function:
+
+```{r}
+example_fitfun_map <- function(Y, ...){
+  # convert Y (matrix) into a long-form dataframe
+  data = melt_spacebreak(Y)
+
+  ## fit the models of interest
+  model.lm <- stats::lm(value ~ time, data = data) # linear
+  model.lmer <- lme4::lmer(value ~ (1|time), data = data) #random effects
+  ## any other model that you want goes here ...
+
+  # return the model outputs, even if they differ.
+  output <- list(lm = model.lm, lmer = model.lmer)
+}
+```
+
+Now we'll simulate the 3 maps:
+
+```{r}
+sims <- simulate_spacebreak(nmaps = 3, map.dims = c(4, 4), break.df = bdf.4,
+                            covar.pars = list(range = .5),
+                            arima.mod = list(ar = .5),
+                            sd = 1, 
+                            seasonality = list(amp = 1.2, per = 1), 
+                            times = seq(0, 10, by = 1/12), 
+                            fit_FUN = example_fitfun_map)
+```
+
+And show a simple output of the results by plotting each of the 3 maps, including
+the true trends in red and the fitted model from the simple regression case:
+
+```{r}
+for(i in seq_len(length(sims$data))){
+  matplot(y = t(sims$data[[i]]), x = sims$time, type = "l", ylab = "Y", xlab = "Time", col = 'grey50',
+          main = paste("sim", i))
+  lines(sims$f.t ~ sims$time, col = "red", lwd = 2) # true slopes
+  
+  ## add in linear slope from model
+  lines(predict(sims$fits[[1]]$lm, newdata = data.frame(time = sims$time)) ~ sims$time, col = "blue", lty = 2, lwd = 2)
+}
+```
+
+The linear model does a poor job of approximating the true trends - as expected.

@@ -17,4 +17,6 @@ Imports:
 Suggests: 
   scales,
   mvtnorm,
-  remotePARTS
+  remotePARTS,
+  lme4,
+  reshape2

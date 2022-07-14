@@ -2,6 +2,7 @@
 % Please edit documentation in R/main-simulation-function.R
 \name{generate_spacebreak}
 \alias{generate_spacebreak}
+\alias{simulate_spacebreak}
 \title{Generate a spatiotemporal variable}
 \usage{
 generate_spacebreak(
@@ -14,6 +15,21 @@ generate_spacebreak(
   sd = 0.2,
   arima.mod = list(ar = 0.2),
   times = NULL
+)
+
+simulate_spacebreak(
+  nmaps = 5L,
+  map.dims = c(3, 3),
+  ntime = 50,
+  break.df,
+  seasonality = NULL,
+  covar_FUN = remotePARTS::covar_exp,
+  covar.pars = list(range = 0.1),
+  sd = 0.2,
+  arima.mod = list(ar = 0.2),
+  times = NULL,
+  fit_FUN = NULL,
+  ...
 )
 }
 \arguments{
@@ -37,6 +53,12 @@ argument of \code{sparima_sim()}.}
 
 \item{times}{an optional list of time points. When this argument is anything
 other than \code{NA}, \code{ntime = length(times)}.}
+
+\item{nmaps}{integer indicating the number of maps to simulate}
+
+\item{fit_FUN}{optional function to apply to each map}
+
+\item{...}{additional arguments passed to \code{fit_FUN}}
 }
 \value{
 a 'spacebreak' list object with the following elements
@@ -54,9 +76,25 @@ evaluated from the \code{season()} function for each time point.}
 \item{spatiotemp}{a matrix containing the spatiotemporal autocorrelation
 component of Y.}
 }
+
+a list with the following elements:
+\describe{
+\item{data}{a list containing \code{nmaps} spatio temporal matrices
+whose rows contain pixels and whose columns contain time points}
+\item{f.t}{a vector of length \code{ntime}, containing values of the
+piecewise timeseries function, evaluated at each time point.}
+\item{s.t}{an optional vector of length \code{ntime}, containing values
+evaluated from the \code{season()} function for each time point.}
+\item{time}{a vector of time points.}
+\item{space}{a list, as output by \code{generate_spcov()}.}
+\item{fits}{a list containing the results of fit_FUN for each spatiotemporal
+matrix}
+}
 }
 \description{
 Generate a spatiotemporal variable
+
+Title
 }
 \examples{
 
@@ -70,5 +108,9 @@ breakR:::plot.spacebreak(x = spacebreak)
 spacebreak2 <- generate_spacebreak(break.df = bdf, seasonality = list(amp = .5, per = 4), sd = 1)
 
 breakR:::plot.spacebreak(x = spacebreak2)
+
+(sims <- simulate_spacebreak(nmaps = 3L, break.df = bdf, sd = 1, ntime = 10,
+                             fit_FUN = example_fitfun))
+
 
 }
